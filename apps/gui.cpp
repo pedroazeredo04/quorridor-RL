@@ -56,9 +56,18 @@ int main(void)
             draw_player(game_state.get_A_cell(), Player::A, display);
             draw_player(game_state.get_B_cell(), Player::B, display);
 
+            Color ballColor = YELLOW;
+
+            // Make move
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                PawnMove target = { mouse_cell };
+                game_state.move_pawn(target);
+                ballColor = DARKGRAY;
+            }
+
             // Draw mouse reference
             //Vector2 mousePos = GetWorldToScreen2D(GetMousePosition(), camera)
-            DrawCircleV(GetMousePosition(), 4, DARKGRAY);
+            DrawCircleV(GetMousePosition(), 4, ballColor);
             DrawTextEx(GetFontDefault(), TextFormat("[%i, %i]", mouse_cell.col, mouse_cell.row),
                 Vector2Add(GetMousePosition(), (Vector2){ -44, -24 }), 20, 2, BLACK);
 

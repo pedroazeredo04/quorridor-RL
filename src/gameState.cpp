@@ -22,26 +22,26 @@ int cell_to_index(const Cell& cell) {
 bool GameState::is_cell_valid(const Cell& cell) {
     bool positive = (cell.row >= 0 && cell.col >= 0);
     bool less_than_board_size = (cell.row < BOARD_SIZE && cell.col < BOARD_SIZE);
-    
-    return positive && less_than_board_size;
+
+    return (positive && less_than_board_size);
 }
 
 bool GameState::is_player_at(const Cell& cell) {
-    bool is_player_A_there = (board_state_.A_position.row == cell.row) &&
-                             (board_state_.A_position.col == cell.col);
+    bool is_player_A_there = ((board_state_.A_position.row == cell.row) &&
+                             (board_state_.A_position.col == cell.col));
          
-    bool is_player_B_there = (board_state_.B_position.row == cell.row) &&
-                            (board_state_.B_position.col == cell.col);
+    bool is_player_B_there = ((board_state_.B_position.row == cell.row) &&
+                            (board_state_.B_position.col == cell.col));
 
     return is_player_A_there || is_player_B_there;
 }
 
 void GameState::move_pawn(const PawnMove& move) {
     std::vector<Move> valid_moves = get_valid_moves();
-    
+
     bool move_is_valid = false;
     for (auto valid_move : valid_moves) {
-            
+
         if (!std::holds_alternative<PawnMove>(valid_move)) continue;
 
         PawnMove valid_pawn_move = std::get<PawnMove>(valid_move);
@@ -57,8 +57,10 @@ void GameState::move_pawn(const PawnMove& move) {
     Cell selected = move.target;
     if (current_turn_ == Player::A) {
         board_state_.A_position = selected;
+        current_turn_ = Player::B;
     } else {
         board_state_.B_position = selected;
+        current_turn_ = Player::A;
     }
 }
 
@@ -73,13 +75,13 @@ std::vector<Move> GameState::get_valid_moves() {
 
     std::vector<Move> valid_pawn_moves;
 
-    for (int delta_row=-1; delta_row++; delta_row<2) {
-        for (int delta_col=-1; delta_col++; delta_col<2) {
+    for (int delta_row=-1; delta_row<2; delta_row++) {
+        for (int delta_col=-1; delta_col<2; delta_col++) {
             Cell target_cell;
             target_cell.row = player_cell.row + delta_row;
             target_cell.col = player_cell.col + delta_col;
-            
-            if (is_cell_valid(target_cell) && !is_player_at(target_cell)) {
+
+            if (is_cell_valid(target_cell) && (!is_player_at(target_cell))) {
                 valid_pawn_moves.push_back(PawnMove{ target_cell });
             }
         }
