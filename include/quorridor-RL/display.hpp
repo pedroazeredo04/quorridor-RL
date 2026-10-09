@@ -14,6 +14,7 @@ class Display {
     public:
         Display();
         Cell pixel_to_cell(int x_mouse, int y_mouse);
+        Vector2 center_of(Cell c);
 
         void update(int screen_width, int screen_height);
 
@@ -22,10 +23,10 @@ class Display {
 
     private:
         int board_size_px_;
-        double margin_px_;
+        float margin_px_;
         int cell_size_px_;
 
-        double margin_percentage_{0.05f};  // 5% border
+        float margin_percentage_{0.05f};  // 5% border
 };
 
 #endif  // _DISPLAY_HPP_

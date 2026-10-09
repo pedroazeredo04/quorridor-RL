@@ -1,6 +1,11 @@
 #include "quorridor-RL/display.hpp"
 #include "quorridor-RL/gameState.hpp"
 
+// Header
+
+void draw_player(Cell player_cell, Player player_type, Display display);
+
+
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -15,6 +20,7 @@ int main(void)
     SetTargetFPS(60);       // Set our game to run at 60 frames-per-second
 
     Display display;
+    GameState game_state;
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -46,6 +52,10 @@ int main(void)
                 }
             }
 
+            // Draw players
+            draw_player(game_state.get_A_cell(), Player::A, display);
+            draw_player(game_state.get_B_cell(), Player::B, display);
+
             // Draw mouse reference
             //Vector2 mousePos = GetWorldToScreen2D(GetMousePosition(), camera)
             DrawCircleV(GetMousePosition(), 4, DARKGRAY);
@@ -62,4 +72,8 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     return 0;
+}
+
+void draw_player(Cell player_cell, Player player_type, Display display) {
+    DrawCircleV(display.center_of(player_cell), display.get_cell_size() * 0.35f, player_type == Player::A ? RED : BLUE);
 }

@@ -4,7 +4,7 @@ Display::Display() { }
 
 Cell Display::pixel_to_cell(int x_mouse, int y_mouse) {
     int mouse_col = (int) ((x_mouse - margin_px_) / cell_size_px_);
-    int mouse_row = (int) ((board_size_px_ - y_mouse - margin_px_) / cell_size_px_);
+    int mouse_row = (int) ((y_mouse - margin_px_) / cell_size_px_);
 
     if (mouse_col < 0) mouse_col = 0;
     if (mouse_row < 0) mouse_row = 0;
@@ -16,6 +16,13 @@ Cell Display::pixel_to_cell(int x_mouse, int y_mouse) {
     board.row = mouse_row;
 
     return board;
+}
+
+Vector2 Display::center_of(Cell c) {
+    return {
+        margin_px_ + (c.col + 0.5f) * cell_size_px_,
+        margin_px_ + (c.row + 0.5f) * cell_size_px_
+    };
 }
 
 void Display::update(int screen_width, int screen_height) {
