@@ -56,8 +56,9 @@ class GameState
         int cell_to_index(const Cell& cell);
         bool is_cell_valid(const Cell& cell);
         bool is_player_at(const Cell& cell);
+        bool is_player_at(const Cell& cell, const Player& player);
         
-        void move_pawn(const PawnMove& move);
+        void move_pawn(const PawnMove& request);
         std::vector<Move> get_valid_moves();
 
         // Getters

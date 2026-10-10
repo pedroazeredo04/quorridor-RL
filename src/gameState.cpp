@@ -36,7 +36,18 @@ bool GameState::is_player_at(const Cell& cell) {
     return is_player_A_there || is_player_B_there;
 }
 
-void GameState::move_pawn(const PawnMove& move) {
+bool GameState::is_player_at(const Cell& cell, const Player& player) {
+    Cell player_cell;
+    if (player == Player::A) {
+        player_cell = board_state_.A_position;
+    } else {
+        player_cell = board_state_.B_position;
+    }
+
+    return ((player_cell.row == cell.row) && (player_cell.col == cell.col));
+}
+
+void GameState::move_pawn(const PawnMove& request) {
     std::vector<Move> valid_moves = get_valid_moves();
 
     bool move_is_valid = false;
@@ -46,15 +57,15 @@ void GameState::move_pawn(const PawnMove& move) {
 
         PawnMove valid_pawn_move = std::get<PawnMove>(valid_move);
 
-        if ((move.target.col == valid_pawn_move.target.col) && 
-            (move.target.row == valid_pawn_move.target.row)) {
+        if ((request.target.col == valid_pawn_move.target.col) && 
+            (request.target.row == valid_pawn_move.target.row)) {
                 move_is_valid = true;
             }
     }
 
     if (!move_is_valid) return;
     
-    Cell selected = move.target;
+    Cell selected = request.target;
     if (current_turn_ == Player::A) {
         board_state_.A_position = selected;
         current_turn_ = Player::B;
@@ -75,17 +86,26 @@ std::vector<Move> GameState::get_valid_moves() {
 
     std::vector<Move> valid_pawn_moves;
 
-    for (int delta_row=-1; delta_row<2; delta_row++) {
-        for (int delta_col=-1; delta_col<2; delta_col++) {
-            Cell target_cell;
-            target_cell.row = player_cell.row + delta_row;
-            target_cell.col = player_cell.col + delta_col;
+    constexpr std::array<std::pair<int,int>, 4> directions{{ {-1,0}, {1,0}, {0,-1}, {0,1} }};
+    for (auto [delta_row, delta_col] : directions) { 
+        Cell target_cell;
+        target_cell.row = player_cell.row + delta_row;
+        target_cell.col = player_cell.col + delta_col;
 
-            if (is_cell_valid(target_cell) && (!is_player_at(target_cell))) {
-                valid_pawn_moves.push_back(PawnMove{ target_cell });
+        if (is_cell_valid(target_cell) && (!is_player_at(target_cell))) {
+            valid_pawn_moves.push_back(PawnMove{ target_cell });
+        }
+
+        Cell jump_over_cell = target_cell;
+        if ((is_player_at(target_cell, Player::B) && current_turn_ == Player::A) ||
+            (is_player_at(target_cell, Player::A) && current_turn_ == Player::B)) {
+            jump_over_cell.col += delta_col;
+            jump_over_cell.row += delta_row;
+            if (is_cell_valid(jump_over_cell)) {
+                valid_pawn_moves.push_back(PawnMove { jump_over_cell });
             }
         }
-    }
+     }
 
     return valid_pawn_moves;
 }
