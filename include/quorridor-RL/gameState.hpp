@@ -28,6 +28,11 @@ enum class Orientation {
 struct Cell {
     int row;
     int col;
+
+    bool operator==(const Cell& other) const
+    {
+        return ((row == other.row) && (col == other.col));
+    }
 };
 
 struct Intersection { 
@@ -43,8 +48,20 @@ struct BoardState
     Cell B_position;
 };
 
-struct PawnMove { Cell target; };
-struct WallMove { Intersection at; Orientation orientation; };
+struct PawnMove { 
+    Cell target; 
+
+    bool operator==(const PawnMove& other) const
+    {
+        return (target == other.target);
+    }
+};
+
+struct WallMove { 
+    Intersection at; 
+    Orientation orientation; 
+};
+
 using Move = std::variant<PawnMove, WallMove>;  // Claude suggestion, very elegant
 
 class GameState 
@@ -59,11 +76,14 @@ class GameState
         bool is_player_at(const Cell& cell, const Player& player);
         
         void move_pawn(const PawnMove& request);
+        std::vector<PawnMove> get_valid_pawn_moves();
+        std::vector<WallMove> get_valid_wall_moves();
         std::vector<Move> get_valid_moves();
 
         // Getters
         Cell get_A_cell() { return board_state_.A_position; };
         Cell get_B_cell() { return board_state_.B_position ; }
+        Player get_current_turn() { return current_turn_; }
 
     private:
         BoardState board_state_;

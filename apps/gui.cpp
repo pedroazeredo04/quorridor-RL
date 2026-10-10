@@ -21,6 +21,8 @@ int main(void)
 
     Display display;
     GameState game_state;
+    bool pawn_selected = false;
+    bool wall_selected = true;
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -34,7 +36,6 @@ int main(void)
         Cell mouse_cell = display.pixel_to_cell(GetMouseX(), GetMouseY());
 
         //----------------------------------------------------------------------------------
-
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
@@ -59,11 +60,47 @@ int main(void)
             Color ballColor = YELLOW;
 
             // Make move
+
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                PawnMove target = { mouse_cell };
-                game_state.move_pawn(target);
-                ballColor = DARKGRAY;
+                // Select or unselect pawn
+                bool is_clicked_cell_a_valid_pawn_move = false;
+                if ((mouse_cell == game_state.get_A_cell() && game_state.get_current_turn() == Player::A) ||
+                    (mouse_cell == game_state.get_B_cell() && game_state.get_current_turn() == Player::B)) {
+                        pawn_selected = true;
+                    } else {
+                        for (auto valid_pawn_move : game_state.get_valid_pawn_moves()) {
+                            if (mouse_cell == valid_pawn_move.target) {
+                                is_clicked_cell_a_valid_pawn_move = true;
+                                continue;
+                            }
+                        }
+                        
+                        if (!is_clicked_cell_a_valid_pawn_move) {
+                            pawn_selected = false;
+                        }
+                    }
+                
+                // Actually move the pawn, if it selected
+                if (pawn_selected) {
+                    PawnMove target = { mouse_cell };
+                    game_state.move_pawn(target);
+
+                    // unselect pawn if a _valid_ move is made. It is now the other player's turn!
+                    if (is_clicked_cell_a_valid_pawn_move) {
+                        pawn_selected = false;
+                    }
+                }
             }
+
+            if (pawn_selected) {
+                for (auto pawn_move : game_state.get_valid_pawn_moves()) {
+                    Cell pawn_move_cell = pawn_move.target;
+
+                    DrawCircleV(display.center_of(pawn_move_cell), display.get_cell_size() * 0.075f, LIGHTGRAY);
+                }
+            }
+
+            ballColor = DARKGRAY;
 
             // Draw mouse reference
             //Vector2 mousePos = GetWorldToScreen2D(GetMousePosition(), camera)

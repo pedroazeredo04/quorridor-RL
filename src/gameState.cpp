@@ -27,11 +27,9 @@ bool GameState::is_cell_valid(const Cell& cell) {
 }
 
 bool GameState::is_player_at(const Cell& cell) {
-    bool is_player_A_there = ((board_state_.A_position.row == cell.row) &&
-                             (board_state_.A_position.col == cell.col));
+    bool is_player_A_there = (board_state_.A_position == cell);
          
-    bool is_player_B_there = ((board_state_.B_position.row == cell.row) &&
-                            (board_state_.B_position.col == cell.col));
+    bool is_player_B_there = (board_state_.B_position == cell);
 
     return is_player_A_there || is_player_B_there;
 }
@@ -57,10 +55,9 @@ void GameState::move_pawn(const PawnMove& request) {
 
         PawnMove valid_pawn_move = std::get<PawnMove>(valid_move);
 
-        if ((request.target.col == valid_pawn_move.target.col) && 
-            (request.target.row == valid_pawn_move.target.row)) {
+        if (request == valid_pawn_move) {
                 move_is_valid = true;
-            }
+        }
     }
 
     if (!move_is_valid) return;
@@ -75,7 +72,7 @@ void GameState::move_pawn(const PawnMove& request) {
     }
 }
 
-std::vector<Move> GameState::get_valid_moves() {
+std::vector<PawnMove> GameState::get_valid_pawn_moves() {
     Cell player_cell;
 
     if (current_turn_ == Player::A) {
@@ -84,7 +81,7 @@ std::vector<Move> GameState::get_valid_moves() {
         player_cell = board_state_.B_position;
     }
 
-    std::vector<Move> valid_pawn_moves;
+    std::vector<PawnMove> valid_pawn_moves;
 
     constexpr std::array<std::pair<int,int>, 4> directions{{ {-1,0}, {1,0}, {0,-1}, {0,1} }};
     for (auto [delta_row, delta_col] : directions) { 
@@ -97,8 +94,7 @@ std::vector<Move> GameState::get_valid_moves() {
         }
 
         Cell jump_over_cell = target_cell;
-        if ((is_player_at(target_cell, Player::B) && current_turn_ == Player::A) ||
-            (is_player_at(target_cell, Player::A) && current_turn_ == Player::B)) {
+        if (is_player_at(target_cell)) {
             jump_over_cell.col += delta_col;
             jump_over_cell.row += delta_row;
             if (is_cell_valid(jump_over_cell)) {
@@ -108,4 +104,42 @@ std::vector<Move> GameState::get_valid_moves() {
      }
 
     return valid_pawn_moves;
+}
+
+std::vector<WallMove> GameState::get_valid_wall_moves() {
+    std::vector<WallMove> valid_wall_moves;
+
+    if ((current_turn_ == Player::A && A_remaining_walls_ == 0) ||
+        (current_turn_ == Player::B && B_remaining_walls_ == 0)) {
+        return valid_wall_moves;
+    }
+
+    // All moves are legal, except the ones that aren't.
+    // Start with horizontal walls:
+    for (int i=0; i < board_state_.walls.size(); i++) {
+        int current_intersection_row = (int) (i / (BOARD_SIZE-1));
+        int current_intersection_col = (int) (i % (BOARD_SIZE-1));
+        WallSlot current_wall = board_state_.walls[i];
+
+        if (current_wall == WallSlot::Empty) {
+            Intersection valid_intersection = {current_intersection_row, current_intersection_col};
+            WallMove valid_wall_move_h = {valid_intersection, Orientation::Horizontal};
+            WallMove valid_wall_move_v = {valid_intersection, Orientation::Vertical};
+            valid_wall_moves.push_back(valid_wall_move_h);
+            valid_wall_moves.push_back(valid_wall_move_v);
+        }
+    }
+
+    return valid_wall_moves;
+}
+
+std::vector<Move> GameState::get_valid_moves() {
+    std::vector<PawnMove> pawn_moves = get_valid_pawn_moves();
+    std::vector<WallMove> wall_moves = get_valid_wall_moves();
+
+    std::vector<Move> valid_moves;
+    valid_moves.reserve(pawn_moves.size() + wall_moves.size());
+    valid_moves.insert(valid_moves.end(), pawn_moves.begin(), pawn_moves.end());
+    valid_moves.insert(valid_moves.end(), wall_moves.begin(), wall_moves.end());
+    return valid_moves;
 }
